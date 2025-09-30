@@ -1,0 +1,37 @@
+{
+	"lock": false,
+	"name": "@li/deno-fmt",
+	"version": "0.0.0",
+	"exports": {
+		".": "./src/mod.ts"
+	},
+	"tasks": {
+		"test": "deno test --allow-run"
+	},
+	"imports": {
+		"@std/assert": "jsr:@std/assert@^1.0.14",
+		"@std/fmt": "jsr:@std/fmt@^1.0.8",
+		"@std/streams": "jsr:@std/streams@^1.0.12",
+		"@std/testing": "jsr:@std/testing@^1.0.15",
+		"ansi-regex": "npm:ansi-regex@^6.2.2"
+	},
+	"fmt": {
+		"semiColons": false,
+		"useTabs": true,
+		"lineWidth": 120,
+		"indentWidth": 4,
+		"singleQuote": true,
+		"proseWrap": "preserve",
+		"exclude": ["README.md"]
+	},
+	"compilerOptions": { "strict": true },
+	"lint": {
+		"exclude": [],
+		"rules": {
+			"tags": ["recommended"],
+			"exclude": [],
+			"include": []
+		}
+	},
+	"exclude": []
+}
