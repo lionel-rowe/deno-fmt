@@ -75,15 +75,12 @@ export class DenoFmtStream extends TransformStream<Uint8Array, Uint8Array> {
 		).spawn()
 
 		const stdin = process.stdin.getWriter()
-		const stdout = process.stdout.getReader()
 
 		super({
 			start(controller) {
 				void (async () => {
-					while (true) {
-						const read = await stdout.read()
-						if (read.done) break
-						controller.enqueue(read.value)
+					for await (const chunk of process.stdout) {
+						controller.enqueue(chunk)
 					}
 					done.resolve()
 				})()
@@ -101,7 +98,7 @@ export class DenoFmtStream extends TransformStream<Uint8Array, Uint8Array> {
 					controller.error(new Error((await new Response(process.stderr).text()).replaceAll(ansiRegex(), '')))
 				}
 				await Promise.all([
-					stdout.cancel(),
+					process.stdout.cancel(),
 					process.stderr.cancel(),
 				])
 			},
