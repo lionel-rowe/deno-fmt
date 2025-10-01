@@ -44,7 +44,7 @@ type Ext =
 export class DenoFmtStream extends TransformStream<Uint8Array, Uint8Array> {
 	constructor(options?: DenoFmtStreamOptions) {
 		let ext: string | null = options?.ext ?? null
-		const ac = new AbortController()
+		const done = Promise.withResolvers<void>()
 
 		if (ext == null) {
 			if (options?.fileName == null) {
@@ -52,7 +52,7 @@ export class DenoFmtStream extends TransformStream<Uint8Array, Uint8Array> {
 			} else {
 				const m = options?.fileName?.match(/(?<=\.)\w+$/)?.[0]
 				if (m == null) {
-					throw new Error(`Could not determine extension from file name '${options.fileName}'`)
+					throw new Error(`Could not determine extension from file name ${JSON.stringify(options.fileName)}`)
 				}
 				ext = m
 			}
@@ -79,39 +79,32 @@ export class DenoFmtStream extends TransformStream<Uint8Array, Uint8Array> {
 
 		super({
 			start(controller) {
-				queueUntilDone(stdout, controller, ac.signal)
+				void (async () => {
+					while (true) {
+						const read = await stdout.read()
+						if (read.done) break
+						controller.enqueue(read.value)
+					}
+					done.resolve()
+				})()
 			},
 			transform(chunk) {
 				stdin.write(chunk)
 			},
 			async flush(controller) {
-				ac.abort()
-				await Promise.all([
+				const [result] = await Promise.all([
+					process.status,
+					done.promise,
 					stdin.close(),
-					queueUntilDone(stdout, controller),
 				])
-
-				const result = await process.status
 				if (!result.success) {
 					controller.error(new Error((await new Response(process.stderr).text()).replaceAll(ansiRegex(), '')))
 				}
-
-				await stdout.cancel()
-				await process.stderr.cancel()
+				await Promise.all([
+					stdout.cancel(),
+					process.stderr.cancel(),
+				])
 			},
 		})
-	}
-}
-
-async function queueUntilDone(
-	reader: ReadableStreamDefaultReader<Uint8Array>,
-	controller: TransformStreamDefaultController<Uint8Array>,
-	signal?: AbortSignal,
-) {
-	while (true) {
-		const read = await reader.read()
-		if (read.done) break
-		controller.enqueue(read.value)
-		if (signal?.aborted) break
 	}
 }

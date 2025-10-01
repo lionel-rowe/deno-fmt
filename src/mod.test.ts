@@ -46,7 +46,7 @@ Deno.test(DenoFmtStream.name, async (t) => {
 		assertThrows(
 			() => input.pipeThrough(new DenoFmtStream({ ...DEFAULT_OPTIONS, fileName: 'html' })),
 			Error,
-			"Could not determine extension from file name 'html'",
+			'Could not determine extension from file name "html"',
 		)
 	})
 	await t.step('chunks of arbitrary length', async () => {
