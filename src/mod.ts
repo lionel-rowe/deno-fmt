@@ -22,8 +22,9 @@ export type DenoFmtStreamOptions = {
 // deno-fmt-ignore
 type Ext =
 	| 'ts' | 'tsx' | 'js' | 'jsx' | 'mts' | 'mjs' | 'cts' | 'cjs' | 'md'
-	| 'json' | 'jsonc' | 'css' | 'scss' | 'sass' | 'less' | 'html' | 'svelte'
-	| 'vue' | 'astro' | 'yml' | 'yaml' | 'ipynb' | 'sql' | 'vto' | 'njk'
+	| 'json' | 'jsonc' | 'css' | 'scss' | 'less' | 'html' | 'xml' | 'svg'
+	| 'svelte' | 'vue' | 'astro' | 'yml' | 'yaml' | 'ipynb' | 'sql' | 'vto'
+	| 'njk'
 
 /**
  * A TransformStream that formats the input using `deno fmt`.
@@ -104,4 +105,16 @@ export class DenoFmtStream extends TransformStream<Uint8Array, Uint8Array> {
 			},
 		})
 	}
+}
+
+/**
+ * Formats the input using `deno fmt`.
+ * Requires `--allow-run` permissions to spawn the `deno fmt` subprocess.
+ *
+ * @param input The input code to format.
+ * @param options The options to configure the `deno fmt` process.
+ * @returns A promise that resolves to the formatted code as a string.
+ */
+export function denoFmt(input: BlobPart, options?: DenoFmtStreamOptions): Promise<string> {
+	return new Response(new Blob([input]).stream().pipeThrough(new DenoFmtStream(options))).text()
 }

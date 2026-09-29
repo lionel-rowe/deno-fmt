@@ -1,12 +1,12 @@
-import { DenoFmtStream } from './mod.ts'
+import { denoFmt, DenoFmtStream } from './mod.ts'
 import { FixedChunkStream } from '@std/streams/unstable-fixed-chunk-stream'
 import { assertEquals, assertRejects, assertThrows } from '@std/assert'
 import { stub } from '@std/testing/mock'
 
 const TS_INPUT = 'let x=\n\t1;;;\n++x\n'
 const TS_EXPECTED = 'let x = 1;\n++x;\n'
-const HTML_INPUT = '<A>\n\t  \nxyz   </A>\t'
-const HTML_EXPECTED = '<a>\n  xyz\n</a>\n'
+const HTML_INPUT = '<p>\n</P>'
+const HTML_EXPECTED = '<p></p>\n'
 const DEFAULT_OPTIONS = { config: null } as const
 
 Deno.test(DenoFmtStream.name, async (t) => {
@@ -37,7 +37,7 @@ Deno.test(DenoFmtStream.name, async (t) => {
 					input.pipeThrough(new DenoFmtStream({ ...DEFAULT_OPTIONS, fileName: 'a.unknown' })),
 				).bytes(),
 			Error,
-			"invalid value 'unknown' for '--ext <ext>'",
+			"invalid value 'unknown' for '--ext'",
 		)
 	})
 	await t.step('throws on fileName with no extension', () => {
@@ -74,4 +74,10 @@ Deno.test(DenoFmtStream.name, async (t) => {
 		const output = await new Response(input.pipeThrough(new DenoFmtStream(DEFAULT_OPTIONS))).text()
 		assertEquals(output, TS_EXPECTED.repeat(INPUT_QUANTITY))
 	})
+})
+
+Deno.test(denoFmt.name, async () => {
+	const input = TS_INPUT
+	const output = await denoFmt(input, DEFAULT_OPTIONS)
+	assertEquals(output, TS_EXPECTED)
 })
